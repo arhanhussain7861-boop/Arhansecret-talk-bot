@@ -209,7 +209,35 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
 
     log.info("SecretTalk is starting")
-    app.run_polling()
+   async def lookup(update, context):
+    if not context.args:
+        await update.message.reply_text(
+            "Use: /lookup +919876543210"
+        )
+        return
+
+    number = " ".join(context.args)
+
+    try:
+        parsed = phonenumbers.parse(number, None)
+
+        country = phonenumbers.region_code_for_number(parsed)
+        formatted = phonenumbers.format_number(
+            parsed,
+            phonenumbers.PhoneNumberFormat.INTERNATIONAL
+        )
+        valid = phonenumbers.is_valid_number(parsed)
+
+        await update.message.reply_text(
+            f"Number: {formatted}\n"
+            f"Country: {country or 'Unknown'}\n"
+            f"Valid: {'Yes' if valid else 'No'}"
+        )
+
+    except phonenumbers.NumberParseException:
+        await update.message.reply_text(
+            "Invalid number format. Country code ke saath bhejo."
+        )application.add_handler(CommandHandler("lookup", lookup)) app.run_polling()
 
 if __name__ == "__main__":
     main()
